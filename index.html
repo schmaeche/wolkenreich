@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Wolkenreich Demo</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel='stylesheet' href='index.css'/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css"
+   integrity="sha512-M2wvCLH6DSRazYeZRIm1JnYyh22purTM+FDB5CsyxtQJYeKq83arPe5wgbNmcFXGqiSH2XR8dT/fJISVA1r/zQ=="
+   crossorigin=""/>
+
+  <script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"
+  integrity="sha512-lInM/apFSqyy1o6s89K4iQUKg6ppXEgsVxT35HbzUupEVRh2Eu9Wdl4tHj7dZO0s1uvplcYGmt3498TtHq+log=="
+  crossorigin="">
+  </script>
+
+</head>
+<body onload="MBmap.initMap()">
+  <h1>Wolkenreich Demo</h1>
+  <div id='controls'>
+    <button id='btn_update' class="btn" onclick="btnUpdateClick(event)">Update</button>
+  </div>
+  <div id="id_map" style="height: 800px"></div>
+  <script src="js/events.js"></script>
+  <script src='js/mapmgr.js'></script>
+</body>
+</html>
