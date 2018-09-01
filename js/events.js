@@ -15,15 +15,19 @@ var URL_STATES = 'states/all';
 // HANDLER
 //******************************************************************************
 function btnUpdateClick(ev) {
-  console.log("was here");
+
+  var boxCoordinates = MBmap.getViewLocation();
 
   var request = new XMLHttpRequest();
       request.onreadystatechange = function() {
            if (this.readyState == 4 && this.status == 200) {
-               alert(this.responseText);
+               //alert(this.responseText);
+               MBmap.showMarker(this.responseText);
            }
       };
-      request.open("GET", URL_BASE + URL_STATES, true);
+      reqUrl = URL_BASE + URL_STATES + "?lamin=" + boxCoordinates[0] + "&lomin=" + boxCoordinates[1] + "&lamax=" + boxCoordinates[2] + "&lomax=" + boxCoordinates[3];
+      request.open("GET", reqUrl, true);
       request.setRequestHeader("Content-type", "application/json");
-      request.send("");
+      request.send();
+      console.log( reqUrl);
 }
