@@ -4,7 +4,6 @@
 
 * {
   font-family: "Palatino", "Georgia", serif;
-  font-size: 24px;
   color: #555;
 }
 
@@ -14,4 +13,37 @@ h1 {
   background-color: #ccc;
   padding: 15px;
   margin: 10px 0px;
+}
+
+.btn {
+  border: 1px solid #555;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  background-color: #ccc;
+  padding: 15px;
+  font-size: 16px;
+  font-weight: bold;
+  float: right;
+}
+
+.btn:hover {
+  background-color: #bbb;
+}
+
+.btn:press {
+  background-color: #555;
+}
+
+.icon_plane div {
+  font-size: 9px;
+  margin-top: -20px;
+}
+
+.tooltip div {
+  font-size: 12px;
+}
+
+.tooltip div b{
+  font-size: 12px;
 }

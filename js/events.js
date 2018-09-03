@@ -16,13 +16,13 @@ var URL_STATES = 'states/all';
 //******************************************************************************
 function btnUpdateClick(ev) {
 
-  var boxCoordinates = MBmap.getViewLocation();
+  var boxCoordinates = MBC.getViewLocation();
 
   var request = new XMLHttpRequest();
       request.onreadystatechange = function() {
            if (this.readyState == 4 && this.status == 200) {
                //alert(this.responseText);
-               MBmap.showMarker(this.responseText);
+               MBC.showMarker(this.responseText);
            }
       };
       reqUrl = URL_BASE + URL_STATES + "?lamin=" + boxCoordinates[0] + "&lomin=" + boxCoordinates[1] + "&lamax=" + boxCoordinates[2] + "&lomax=" + boxCoordinates[3];

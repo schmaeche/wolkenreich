@@ -15,11 +15,14 @@ var layerPlane;
 //###############################
 //### Map Element definitions ###
 //###############################
-var PlaneMarkerIcon = L.icon({
-  iconUrl: 'res/airplane-icon_big@0,1x.png',
-  iconSize: [30, 30],
-  iconAnchor: [15, 15],
-  popupAnchor: [0, 0]
+var PlaneMarkerIcon = L.DivIcon.extend({
+  options: {
+    iconUrl: 'res/airplane-icon_big@0,1x.png',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, 0],
+    className: "icon_plane"
+  }
 });
 
 
@@ -29,7 +32,7 @@ var MBmap = {
   //###############################
 
   _setCurPos: function(position) {
-    map.setView([position.coords.latitude, position.coords.longitude], 16);
+    map.setView([position.coords.latitude, position.coords.longitude], 10);
   },
 
   _onError: function(error) {
@@ -76,6 +79,7 @@ var MBmap = {
 
   initMap: function() {
     // map init
+    // https://api.mapbox.com/styles/v1/schmaeche/cjllgbmo94c6f2so27etz1bpl.html?fresh=true&title=true&access_token=pk.eyJ1Ijoic2NobWFlY2hlIiwiYSI6ImNqNTVmc3NvbzBvenUzM29hYW9jZXp0bG8ifQ.f9LIzhedtt9K8YwfpTcZdQ#9.7/35.494149/139.990844/0
     var mbUrl = 'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoic2NobWFlY2hlIiwiYSI6ImNqNTVmc3NvbzBvenUzM29hYW9jZXp0bG8ifQ.f9LIzhedtt9K8YwfpTcZdQ';
     attribution = 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>';
     streetLayer =    L.tileLayer(mbUrl, {id: 'mapbox.streets', attribution: attribution});
@@ -85,6 +89,7 @@ var MBmap = {
     sportsLayer =    L.tileLayer(mbUrl, {id: 'mapbox.run-bike-hike', attribution: attribution});
     lightLayer =    L.tileLayer(mbUrl, {id: 'mapbox.light', attribution: attribution});
     darkLayer =    L.tileLayer(mbUrl, {id: 'mapbox.dark', attribution: attribution});
+    mylayer = L.tileLayer.wms('https://api.mapbox.com/styles/v1/schmaeche/cjllgbmo94c6f2so27etz1bpl/wmts?access_token=pk.eyJ1Ijoic2NobWFlY2hlIiwiYSI6ImNqNTVmc3NvbzBvenUzM29hYW9jZXp0bG8ifQ.f9LIzhedtt9K8YwfpTcZdQ')
 
     mapBaseLayers = {
       "Streets" : streetLayer,
@@ -94,10 +99,11 @@ var MBmap = {
       "Sports" : sportsLayer,
       "Light" : lightLayer,
       "Dark" : darkLayer,
+      "Andi" : mylayer
     };
 
     map = L.map( 'id_map', {layers: lightLayer} );
-    map.setView( [49.83488, 9.15214], 16);
+    map.setView( [49.83488, 9.15214], 10);
     L.control.layers( mapBaseLayers).addTo( map);
 
     if(navigator.geolocation) {
@@ -123,7 +129,28 @@ var MBmap = {
     var states = JSON.parse(statesJson);
     for( i in states.states) {
       var state = states.states[i];
-      layerPlane.addLayer( L.marker([parseFloat(state[6]), parseFloat(state[5])], {icon: PlaneMarkerIcon}));
+      var title = "<img src='res/airplane-icon_big@0,1x.png' /><div>" + state[1] + "</div>";
+      var tooltip = "<div class='tooltip'>";
+      tooltip += "<div><b>icao: </b>" + state[0] + "</div>";
+      tooltip += "<div><b>callsign: </b>" + state[1] + "</div>";
+      tooltip += "<div><b>origin: </b>" + state[2] + "</div>";
+      tooltip += "<div><b>time: </b>" + new Date(state[3] * 1000) + "</div>";
+      tooltip += "<div><b>last contact: </b>" + new Date(state[4] * 1000) + "</div>";
+      tooltip += "<div><b>longitude: </b>" + state[5] + "</div>";
+      tooltip += "<div><b>latitude: </b>" + state[6] + "</div>";
+      tooltip += "<div><b>geo alt: </b>" + state[7] + "m</div>";
+      tooltip += "<div><b>baro alt: </b>" + state[13] + "m</div>";
+      tooltip += "<div><b>on ground: </b>" + state[8] + "</div>";
+      tooltip += "<div><b>velocity: </b>" + state[9] + "m/s</div>";
+      tooltip += "<div><b>track: </b>" + state[10] + "deg</div>";
+      tooltip += "<div><b>vertical: </b>" + state[11] + "m/s</div>";
+      tooltip += "<div><b>sensors: </b>" + state[12] + "</div>";
+      tooltip += "<div><b>squak: </b>" + state[14] + "</div>";
+      tooltip += "<div><b>spi: </b>" + state[15] + "</div>";
+      tooltip += "<div><b>pos src: </b>" + state[16] + "</div>";
+      tooltip += "</div>";
+      var icon = new PlaneMarkerIcon( {html: title});
+      layerPlane.addLayer( L.marker([parseFloat(state[6]), parseFloat(state[5])], {icon: icon}).bindTooltip(tooltip, {permanent: false}));
     }
   }
 
