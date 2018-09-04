@@ -58,7 +58,14 @@ MBC.initialize = function() {
       },
       "paint": {
         "icon-color": "#b11010",
-        "text-color": "#b11010",
+        "text-color": [
+          "interpolate",
+          ["linear"],
+          ["get","vertical"],
+          -8, "#b11010",
+          0, "#6b6b6b",
+          8, "#39b110"
+        ],
         "text-halo-color": "#eceeed",
         "text-halo-width": 1,
         "text-halo-blur": 0.5
@@ -68,7 +75,7 @@ MBC.initialize = function() {
 
   var popup = new mapboxgl.Popup({
     closeButton: true,
-    closeOnClick: false
+    closeOnClick: true
   });
 
   map.on('mouseenter', 'planes_flying', function(e) {
@@ -151,6 +158,7 @@ MBC.showMarker = function( statesJson) {
         "longitude": parseFloat(state[5]),
         "latitude": parseFloat(state[6]),
         "true_track": state[10],
+        "vertical": parseFloat(state[11]),
         "description": tooltip
       }
     });
