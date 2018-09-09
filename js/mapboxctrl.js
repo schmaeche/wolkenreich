@@ -43,6 +43,14 @@ MBC.initialize = function() {
       }
     });
 
+    map.addSource("opensky-tracks", {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": []
+      }
+    });
+
     map.addLayer({
       "id": "planes_flying",
       "type": "symbol",
@@ -71,11 +79,26 @@ MBC.initialize = function() {
         "text-halo-blur": 0.5
       }
     });
-  });
+    map.addLayer({
+      "id": "plane_tracks",
+      "type": "line",
+      "source": "opensky-tracks",
+      "layout": {
+        "line-join": "round",
+        "line-cap": "round"
+      },
+      "paint": {
+        "line-color": "#1b1bb1",
+        "line-opacity": 0.5,
+        "line-width": 4
+      }
+    },
+    "planes_flying"); // layer plane_tracks
+  }); // on load
 
   var popup = new mapboxgl.Popup({
-    closeButton: true,
-    closeOnClick: true
+    closeButton: false,
+    closeOnClick: false
   });
 
   map.on('mouseenter', 'planes_flying', function(e) {
@@ -101,7 +124,13 @@ MBC.initialize = function() {
 
   map.on('mouseleave', 'planes_flying', function() {
     map.getCanvas().style.cursor = '';
-    //popup.remove();
+    popup.remove();
+  });
+
+  map.on('click', 'planes_flying', function(e) {
+    //var coordinates = e.features[0].geometry.coordinates.slice();
+    var icao = e.features[0].properties.icao;
+    requestAircraftTrack(icao);
   });
 
 }
@@ -165,4 +194,62 @@ MBC.showMarker = function( statesJson) {
 
   } // for
   map.getSource('opensky-states-all').setData(data);
+}
+
+
+MBC.showAircraftFlights = function( flightsJson) {
+  var flightsElem = document.getElementById('flights');
+  flightsElem.innerHTML = flightsJson;
+
+  var flights = JSON.parse(flightsJson);
+
+  var data = {
+    "type": "FeatureCollection",
+    "features": [{
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [ /*[140.4,37.3], [136.7845, 23.566] */]
+      },
+      "properties": {
+        "icao": flights.icao24,
+        "callsign": flights.callsign
+      }
+    }]
+  }; //data
+
+  var points = [];
+  var lastlong = 0;
+  var offset = 0;
+
+  for ( i in flights.path)
+  {
+    // set a offset to draw lines over international date line
+    if( (flights.path[i][2] - lastlong) < -180 ) {
+      // crossing from west to east
+      offset = 360;
+    }
+    else if ((flights.path[i][2] - lastlong) > 180) {
+      // crossing from east to west
+      offset = -360;
+    }
+    points.push( [ flights.path[i][2] + offset, flights.path[i][1]]);
+    lastlong = flights.path[i][2] + offset;
+  }
+
+  var line = turf.lineString(points);
+  var max = points.length;
+  if (max > 1) {
+    var lineDistance = turf.distance( points[0], points[max-1], {units: 'kilometers'});
+
+    var steps = 500;
+
+    // Draw an arc between the `origin` & `destination` of the two points
+    for (var j = 0; j < lineDistance; j += lineDistance / steps) {
+      var segment = turf.along( line, j, {units: 'kilometers'});
+      // Update the route with calculated arc coordinates
+      data.features[0].geometry.coordinates.push(segment.geometry.coordinates);
+    }
+  }
+  map.getSource('opensky-tracks').setData(data);
 }

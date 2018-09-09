@@ -9,6 +9,8 @@
 //******************************************************************************
 var URL_BASE = 'https://schmaeche:18088d7b2a8eb8075fd4c12d9fb7e787@opensky-network.org/api/';
 var URL_STATES = 'states/all';
+var URL_FLIGHTS = 'flights/aircraft';
+var URL_TRACKS = 'tracks/all';
 var stateDataTimer = null;
 
 
@@ -41,4 +43,38 @@ function _requestStates() {
       request.setRequestHeader("Content-type", "application/json");
       request.send();
       console.log( reqUrl);
+}
+
+
+function requestFlightsOfAircraft( icao) {
+  console.log("requestFlightsOfAircraft");
+  var request = new XMLHttpRequest();
+  var dateEnd = Math.ceil( Date.now() / 1000) + 86400;
+  var dateBegin = dateEnd - 172800;
+  request.onreadystatechange = function() {
+       if (this.readyState == 4 && this.status == 200) {
+           MBC.showAircraftFlights(this.responseText);
+       }
+  };
+  reqUrl = URL_BASE + URL_FLIGHTS + "?icao24=" + icao + "&begin=" + dateBegin + "&end=" + dateEnd;
+  request.open("GET", reqUrl, true);
+  request.setRequestHeader("Content-type", "application/json");
+  request.send();
+  console.log( reqUrl);
+}
+
+function requestAircraftTrack( icao) {
+  console.log("requestAircraftTrack");
+  var request = new XMLHttpRequest();
+  var date = 0; // 0 == live
+  request.onreadystatechange = function() {
+       if (this.readyState == 4 && this.status == 200) {
+           MBC.showAircraftFlights(this.responseText);
+       }
+  };
+  reqUrl = URL_BASE + URL_TRACKS + "?icao24=" + icao + "&time=" + date;
+  request.open("GET", reqUrl, true);
+  request.setRequestHeader("Content-type", "application/json");
+  request.send();
+  console.log( reqUrl);
 }

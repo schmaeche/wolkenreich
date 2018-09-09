@@ -5,6 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.46.0/mapbox-gl.js'></script>
+  <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
 
   <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.46.0/mapbox-gl.css' rel='stylesheet' />
   <link rel='stylesheet' href='index.css'/>
@@ -17,7 +18,8 @@
     <button id='btn_update' class="btn" onclick="btnUpdateClick(event)">Flights</button>
   </div>
 
-  <div id='map' style="width: 100%; height: 500px"></div>
+  <div id='map' style="width: 75%; height: 500px"></div>
+  <div id='flights'></div>
 
   <script src="js/events.js"></script>
   <script src="js/mapboxctrl.js"></script>
