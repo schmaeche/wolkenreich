@@ -6,7 +6,7 @@
 
 var MBC = {};
 var map;
-
+var clickedStateId = null;
 var planeMarkerList = {
   elements: [],
 
@@ -29,12 +29,15 @@ MBC.initialize = function() {
     style: 'mapbox://styles/schmaeche/cjllgbmo94c6f2so27etz1bpl'
   });
 
+
   map.addControl(new mapboxgl.GeolocateControl({
     fitBoundsOptions: {maxZoom: 9},
     trackUserLocation: false
   }));
 
   map.on('load', function () {
+    map.setLayerZoomRange("airport-label", 1, 24);
+
     map.addSource("opensky-states-all", {
       "type": "geojson",
       "data": {
@@ -56,13 +59,29 @@ MBC.initialize = function() {
       "type": "symbol",
       "source": "opensky-states-all",
       "layout": {
-          "icon-image": "{icon}-15",
+          "icon-image": "{icon}-11",
           "icon-rotate": { "type": "identity", "property": "true_track"},
-          "text-field": "{callsign}",
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true,
+          "text-field": [
+            "step",
+            ["zoom"],
+            "",
+            8, ["get", "callsign"]
+          ],
           "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
           "text-offset": [0, 0.8],
           "text-anchor": "top",
-          "text-size": 10
+          "text-size": [
+            "interpolate", ["linear"],
+            ["zoom"],
+            7, 0,
+            8, 8,
+            12, 12,
+            16,16
+          ],
+          "text-allow-overlap": true,
+          "text-ignore-placement": true
       },
       "paint": {
         "icon-color": "#b11010",
@@ -74,8 +93,21 @@ MBC.initialize = function() {
           0, "#6b6b6b",
           8, "#39b110"
         ],
-        "text-halo-color": "#eceeed",
-        "text-halo-width": 1,
+        "icon-opacity": ["case",
+              ["boolean", ["feature-state", "selected"], false],
+               1,
+               0.5
+             ],
+        "text-halo-color":  ["case",
+              ["boolean", ["feature-state", "selected"], false],
+               "#eceeed",
+               "#eceeed"
+             ],
+        "text-halo-width": ["case",
+              ["boolean", ["feature-state", "selected"], false],
+               2,
+               1
+             ],
         "text-halo-blur": 0.5
       }
     });
@@ -128,9 +160,17 @@ MBC.initialize = function() {
   });
 
   map.on('click', 'planes_flying', function(e) {
+    if (e.features.length > 0) {
+      if (clickedStateId) {
+        map.setFeatureState({source: 'opensky-states-all', id: clickedStateId}, { selected: false});
+      }
+      clickedStateId = e.features[0].id;
+      map.setFeatureState({source: 'opensky-states-all', id: clickedStateId}, { selected: true});
+    }
     //var coordinates = e.features[0].geometry.coordinates.slice();
     var icao = e.features[0].properties.icao;
     requestAircraftTrack(icao);
+
   });
 
 }
@@ -189,7 +229,8 @@ MBC.showMarker = function( statesJson) {
         "true_track": state[10],
         "vertical": parseFloat(state[11]),
         "description": tooltip
-      }
+      },
+      "id": parseInt( "0x" + state[0])
     });
 
   } // for
@@ -218,7 +259,6 @@ MBC.showAircraftFlights = function( flightsJson) {
     }]
   }; //data
 
-  var points = [];
   var lastlong = 0;
   var offset = 0;
 
@@ -233,23 +273,27 @@ MBC.showAircraftFlights = function( flightsJson) {
       // crossing from east to west
       offset = -360;
     }
-    points.push( [ flights.path[i][2] + offset, flights.path[i][1]]);
+
+    var pointN2 = [ flights.path[i][2] + offset, flights.path[i][1]];
+    if( i > 0) {
+      var pointN1 = data.features[0].geometry.coordinates[data.features[0].geometry.coordinates.length - 1];
+      var lineDistance = turf.distance( turf.point(pointN1), turf.point(pointN2), {units: 'kilometers'});
+      if(lineDistance > 50) {
+        var steps = lineDistance / 50;
+        var line = turf.lineString([pointN1, pointN2]);
+        // Draw an arc between the `origin` & `destination` of the two points
+        for (var j = 0; j < lineDistance; j += lineDistance / steps) {
+          var segment = turf.along( line, j, {units: 'kilometers'});
+          // Update the route with calculated arc coordinates
+          data.features[0].geometry.coordinates.push(segment.geometry.coordinates);
+
+        }
+      }
+    }
+
+    data.features[0].geometry.coordinates.push(pointN2);
     lastlong = flights.path[i][2] + offset;
   }
 
-  var line = turf.lineString(points);
-  var max = points.length;
-  if (max > 1) {
-    var lineDistance = turf.distance( points[0], points[max-1], {units: 'kilometers'});
-
-    var steps = 500;
-
-    // Draw an arc between the `origin` & `destination` of the two points
-    for (var j = 0; j < lineDistance; j += lineDistance / steps) {
-      var segment = turf.along( line, j, {units: 'kilometers'});
-      // Update the route with calculated arc coordinates
-      data.features[0].geometry.coordinates.push(segment.geometry.coordinates);
-    }
-  }
   map.getSource('opensky-tracks').setData(data);
 }
