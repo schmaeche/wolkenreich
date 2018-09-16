@@ -12,6 +12,8 @@ var URL_STATES = 'states/all';
 var URL_FLIGHTS = 'flights/aircraft';
 var URL_TRACKS = 'tracks/all';
 var stateDataTimer = null;
+var isTrackDataTimer = false;
+var selectedIcao = null;
 
 
 //******************************************************************************
@@ -43,6 +45,9 @@ function _requestStates() {
       request.setRequestHeader("Content-type", "application/json");
       request.send();
       console.log( reqUrl);
+  if( isTrackDataTimer && selectedIcao) {
+    requestAircraftTrack(selectedIcao);
+  }
 }
 
 
@@ -65,16 +70,25 @@ function requestFlightsOfAircraft( icao) {
 
 function requestAircraftTrack( icao) {
   console.log("requestAircraftTrack");
+  selectedIcao = icao;
+  isTrackDataTimer = true;
   var request = new XMLHttpRequest();
   var date = 0; // 0 == live
   request.onreadystatechange = function() {
        if (this.readyState == 4 && this.status == 200) {
-           MBC.showAircraftFlights(this.responseText);
+           MBC.showAircraftTrack(this.responseText);
        }
   };
-  reqUrl = URL_BASE + URL_TRACKS + "?icao24=" + icao + "&time=" + date;
+  reqUrl = URL_BASE + URL_TRACKS + "?icao24=" + selectedIcao + "&time=" + date;
   request.open("GET", reqUrl, true);
   request.setRequestHeader("Content-type", "application/json");
   request.send();
   console.log( reqUrl);
+}
+
+function stopRequestAircraftTrack() {
+  if( isTrackDataTimer) {
+    selectedIcao = null;
+    isTrackDataTimer = false;
+  }
 }

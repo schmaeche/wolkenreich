@@ -76,9 +76,9 @@ MBC.initialize = function() {
             "interpolate", ["linear"],
             ["zoom"],
             7, 0,
-            8, 8,
-            12, 12,
-            16,16
+            8, 9,
+            12, 14,
+            16,20
           ],
           "text-allow-overlap": true,
           "text-ignore-placement": true
@@ -137,32 +137,37 @@ MBC.initialize = function() {
     // Change the cursor style as a UI indicator.
     map.getCanvas().style.cursor = 'pointer';
 
-    var coordinates = e.features[0].geometry.coordinates.slice();
-    var description = e.features[0].properties.description;
-
-    // Ensure that if the map is zoomed out such that multiple
-    // copies of the feature are visible, the popup appears
-    // over the copy being pointed to.
-    while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-        coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-    }
-
-    // Populate the popup and set its coordinates
-    // based on the feature found.
-    popup.setLngLat(coordinates)
-        .setHTML(description)
-        .addTo(map);
+    // var coordinates = e.features[0].geometry.coordinates.slice();
+    // var description = e.features[0].properties.description;
+    //
+    // // Ensure that if the map is zoomed out such that multiple
+    // // copies of the feature are visible, the popup appears
+    // // over the copy being pointed to.
+    // while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+    //     coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+    // }
+    //
+    // // Populate the popup and set its coordinates
+    // // based on the feature found.
+    // popup.setLngLat(coordinates)
+    //     .setHTML(description)
+    //     .addTo(map);
   });
 
   map.on('mouseleave', 'planes_flying', function() {
     map.getCanvas().style.cursor = '';
-    popup.remove();
+    // popup.remove();
   });
 
   map.on('click', 'planes_flying', function(e) {
+    e.preventDefault();
+    // e.originalEvent.preventDefault();
+    // e.originalEvent.stopPropagation();
+    console.log("click planes");
     if (e.features.length > 0) {
       if (clickedStateId) {
         map.setFeatureState({source: 'opensky-states-all', id: clickedStateId}, { selected: false});
+        MBC.hideAircraftTracks();
       }
       clickedStateId = e.features[0].id;
       map.setFeatureState({source: 'opensky-states-all', id: clickedStateId}, { selected: true});
@@ -171,6 +176,16 @@ MBC.initialize = function() {
     var icao = e.features[0].properties.icao;
     requestAircraftTrack(icao);
 
+  });
+
+  map.on('click', function(e){
+    console.log("click somewhere");
+    if (!e.defaultPrevented && clickedStateId) {
+      console.log("remove track");
+      map.setFeatureState({source: 'opensky-states-all', id: clickedStateId}, { selected: false});
+      MBC.hideAircraftTracks();
+      stopRequestAircraftTrack();
+    }
   });
 
 }
@@ -185,7 +200,6 @@ MBC.getViewLocation = function() {
 }
 
 MBC.showMarker = function( statesJson) {
-  planeMarkerList.clear();
   var states = JSON.parse(statesJson);
   var data = {
     "type": "FeatureCollection",
@@ -237,12 +251,16 @@ MBC.showMarker = function( statesJson) {
   map.getSource('opensky-states-all').setData(data);
 }
 
-
 MBC.showAircraftFlights = function( flightsJson) {
   var flightsElem = document.getElementById('flights');
   flightsElem.innerHTML = flightsJson;
+}
 
-  var flights = JSON.parse(flightsJson);
+MBC.showAircraftTrack = function( trackJson) {
+  // var flightsElem = document.getElementById('flights');
+  // flightsElem.innerHTML = trackJson;
+
+  var flights = JSON.parse(trackJson);
 
   var data = {
     "type": "FeatureCollection",
@@ -296,4 +314,11 @@ MBC.showAircraftFlights = function( flightsJson) {
   }
 
   map.getSource('opensky-tracks').setData(data);
+}
+
+MBC.hideAircraftTracks = function() {
+  map.getSource('opensky-tracks').setData({
+    "type": "FeatureCollection",
+    "features": []
+  });
 }
